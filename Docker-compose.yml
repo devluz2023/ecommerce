@@ -1,0 +1,112 @@
+version: "3.5"
+
+services:
+#
+#  environment:
+#    ZOOKEEPER_CLIENT_PORT: 2181
+#  kafka:
+#    image: confluentinc/cp-kafka:latest
+#    container_name: kafka
+#    depends_on:
+#      - zookeeper
+#    ports:
+#      - 9092:9092
+#    environment:
+#      KAFKA_BROKER_ID: 1
+#      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+#      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:29092,EXTERNAL://kafka:9092
+#      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
+#      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+#      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+
+  postgres:
+    image: postgres:latest
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_DB: dev
+      POSTGRES_PASSWORD: postgres
+
+#
+#  shop-api:
+#    image: shop-api
+#    container_name: shop-api
+#    ports:
+#      - 8085:8085
+#    depends_on:
+#      - kafka
+#
+#  shop-validator:
+#    image: shop-validator
+#    container_name: shop-validator
+#    ports:
+#      - 8087:8087
+#    depends_on:
+#      - kafka
+#
+#  shop-report:
+#    image: shop-report
+#    container_name: shop-report
+#    ports:
+#      - 8086:8086
+#    depends_on:
+#      - kafka
+
+  product:
+    image: loja/product-api
+    platform: linux/x86_64
+    build:
+      context: product-api
+    ports:
+      - "8081:8081"
+    environment:
+      POSTGRES_URL: jdbc:postgresql://postgres:5432/dev
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    depends_on:
+      - postgres
+
+  user:
+    image: loja/user-api
+    platform: linux/amd64
+    build:
+      context: user-api
+    ports:
+      - "8083:8083"
+    environment:
+      POSTGRES_URL: jdbc:postgresql://postgres:5432/dev
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    depends_on:
+      - postgres
+
+  shopping:
+    image: loja/shopping-api
+    platform: linux/amd64
+    build:
+      context: shopping-api
+    ports:
+      - "8082:8082"
+    environment:
+      POSTGRES_URL: jdbc:postgresql://postgres:5432/dev
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      PRODUCT_API_URL: http://product:8081
+      USER_API_URL: http://user:8080
+    depends_on:
+      - postgres
+
+  gateway:
+    image: loja/gateway
+    platform: linux/amd64
+    build:
+      context: gateway
+    ports:
+      - "8084:8084"
+    environment:
+      PRODUCT_API_URL: http://product:8081
+      USER_API_URL: http://user:8080
+      SHOPPING_API_URL: http://shopping:8082
+    depends_on:
+      - postgres

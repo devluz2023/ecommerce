@@ -1,0 +1,49 @@
+#apiVersion: networking.k8s.io/v1
+#kind: Ingress
+#metadata:
+#  name: gateway-ingress
+#spec:
+#  rules:
+#    - host: localhost
+#      http:
+#        paths:
+#          - path: /user/
+#            pathType: Prefix
+#            backend:
+#              service:
+#                name: user-api
+#                port:
+#                  number: 8080
+##          - path: /product/
+##            pathType: Prefix
+##            backend:
+##              service:
+##                name: product-api
+##                port:
+##                  number: 8081
+##          - path: /shopping/
+##            pathType: Prefix
+##            backend:
+##              service:
+##                name: shopping-api
+##                port:
+##                  number: 8082
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: example-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /$1
+spec:
+  rules:
+    - host: user-api
+      http:
+        paths:
+          - path: /user/
+            pathType: Prefix
+            backend:
+              service:
+                name: user-api
+                port:
+                  number: 8080
